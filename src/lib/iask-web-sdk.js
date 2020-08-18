@@ -48,20 +48,17 @@
     };
 
     // 配置产品信息
-    var PRODUCT_CONFIG = {
+    var CONFIG = {
         TERMINAL_TYPE: '0',        // 终端类型
         PRODUCT_NAME: 'ishare',    // 产品名称
         SITE_TYPE: '办公频道',      // 站点类型
         PRODUCT_CODE: '0',         // 产品代码
         PRODUCT_VER: 'V1.0.0',     // 产品版本
-        APP_CHANNEL: ''           // app应用渠道渠道
-    };
+        APP_CHANNEL: '',           // app应用渠道渠道
 
-
-    var SDK_CONFIG = {
         DEBUG: false,
         SDK_VERSION: '0.1.0'      // sdk版本
-    }
+    };
 
     // 系统事件类型（事件分为：系统事件和业务事件）
     var SYSTEM_EVENT_TYPE = 'system';
@@ -7582,7 +7579,7 @@
     var console = {
         /** @type {function(...[*])} */
         log: function log() {
-            if (SDK_CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
+            if (CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
                 try {
                     windowConsole.log.apply(windowConsole, arguments);
                 } catch (err) {
@@ -7594,7 +7591,7 @@
         },
         /** @type {function(...[*])} */
         error: function error() {
-            if (SDK_CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
+            if (CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
                 var args = ['DATracker error:'].concat(_.toArray(arguments));
                 try {
                     windowConsole.error.apply(windowConsole, args);
@@ -7674,7 +7671,7 @@
                     // 上报时间
                     reportTime: new Date().getTime(),
                     // 终端类型 （js，小程序、安卓、IOS、server、pc）
-                    terminalType: PRODUCT_CONFIG.TERMINAL_TYPE,
+                    terminalType: CONFIG.TERMINAL_TYPE,
                     // 属性事件id
                     peopleID: PEOPLE_PROPERTY_ID,
                     // 用户首次访问时间
@@ -8038,7 +8035,7 @@
 
                     // sdk类型 （js，小程序、安卓、IOS、server、pc）
                     terminalType: '0',
-                    sdkVersion: PRODUCT_CONFIG.SDK_VERSION,
+                    sdkVersion: CONFIG.SDK_VERSION,
 
                     loginStatus: this.instance.get_property('loginStatus'),
                     visitID: this.instance.get_property('visitID'),
@@ -8048,11 +8045,11 @@
                     sessionID: this.instance.get_property('sessionID'),
 
                     //产品信息
-                    productName: PRODUCT_CONFIG.PRODUCT_NAME,
-                    productCode: PRODUCT_CONFIG.PRODUCT_CODE,
-                    productVer: PRODUCT_CONFIG.PRODUCT_VER,
-                    siteType: PRODUCT_CONFIG.SITE_TYPE,
-                    appChannel: PRODUCT_CONFIG.APP_CHANNEL,
+                    productName: CONFIG.PRODUCT_NAME,
+                    productCode: CONFIG.PRODUCT_CODE,
+                    productVer: CONFIG.PRODUCT_VER,
+                    siteType: CONFIG.SITE_TYPE,
+                    appChannel: CONFIG.APP_CHANNEL,
 
                     // 用户首次访问时间
                     persistedTime: this.instance.get_property('persistedTime'),
@@ -8072,6 +8069,17 @@
                     // 事件自定义属性
                     var: user_set_properties,
                 };
+
+                // userID、visitID和loginStatus 值初始化
+                if (!this.instance.get_property('userId')) {
+                    data['userId'] = '';
+                }
+                if (!this.instance.get_property('visitID')) {
+                    data['visitID'] = '';
+                }
+                if (!this.instance.get_property('loginStatus')) {
+                    data['loginStatus'] = '0';
+                }
 
                 //添加IP字段
                 loadJS('http://pv.sohu.com/cityjson?ie=utf-8', function () {
@@ -8155,18 +8163,12 @@
                     });
                 }
             }
+
+        }, {
             /**
              * 用户登录和注册时调用
              * @param {String} user_id
              */
-
-        }, {
-            key: 'setVisitID',
-            value: function setVisitID(visit_id) {
-                this['local_storage'].register({'visitID': visit_id});
-                this.track(SYSTEM_EVENT_OBJECT.setVisitID.event_id, SYSTEM_EVENT_OBJECT.setVisitID.event_name, SYSTEM_EVENT_OBJECT.setVisitID.event_type);
-            }
-        }, {
             key: 'login',
             value: function login(user_id) {
                 // this._signup(user_id);
@@ -8184,8 +8186,14 @@
                 this.track(SYSTEM_EVENT_OBJECT.logout.event_id, SYSTEM_EVENT_OBJECT.logout.event_name, SYSTEM_EVENT_OBJECT.logout.event_type);
             }
         }, {
-            key: 'clearVisitID',
-            value: function clearVisitID() {
+            key: 'set_visit_id',
+            value: function set_visit_id(visit_id) {
+                this['local_storage'].register({'visitID': visit_id});
+                this.track(SYSTEM_EVENT_OBJECT.setVisitID.event_id, SYSTEM_EVENT_OBJECT.setVisitID.event_name, SYSTEM_EVENT_OBJECT.setVisitID.event_type);
+            }
+        }, {
+            key: 'clear_visit_id',
+            value: function clear_visit_id() {
                 this['local_storage'].register({'visitID': ''});
                 this.track(SYSTEM_EVENT_OBJECT.clearVisitID.event_id, SYSTEM_EVENT_OBJECT.clearVisitID.event_name, SYSTEM_EVENT_OBJECT.clearVisitID.event_type);
             }
@@ -8221,14 +8229,14 @@
     var LOCAL_STORAGE = function () {
         /**
          *
-         * @param {Object} PRODUCT_CONFIG
+         * @param {Object} config
          */
-        function LOCAL_STORAGE(PRODUCT_CONFIG) {
+        function LOCAL_STORAGE(config) {
             _classCallCheck$2(this, LOCAL_STORAGE);
 
-            var local_storage = PRODUCT_CONFIG['local_storage'];
+            var local_storage = config['local_storage'];
             if (_.isObject(local_storage)) {
-                this['name'] = local_storage['name'] || '' + PRODUCT_CONFIG['token'] + '_sdk';
+                this['name'] = local_storage['name'] || '' + config['token'] + '_sdk';
                 var storage_type = local_storage['type'] || 'cookie';
 
                 // 判断是否支持 localStorage
@@ -8352,7 +8360,7 @@
 
         }, {
             key: 'upgrade',
-            value: function upgrade(PRODUCT_CONFIG) {
+            value: function upgrade(config) {
                 var old_cookie = void 0;
                 if (this.storage === _.localStorage) {
                     old_cookie = _.cookie.parse(this.name);
@@ -8493,25 +8501,25 @@
     }
 
     var SPA = {
-        PRODUCT_CONFIG: {
+        config: {
             mode: 'hash',
             track_replace_state: false,
             callback_fn: function callback_fn() {
             }
         },
-        init: function init(PRODUCT_CONFIG) {
-            this.PRODUCT_CONFIG = _.extend(this.PRODUCT_CONFIG, PRODUCT_CONFIG || {});
+        init: function init(config) {
+            this.config = _.extend(this.config, config || {});
             this.path = getPath();
             this.url = document.URL;
             this.event();
         },
         event: function event() {
-            if (this.PRODUCT_CONFIG.mode === 'history') {
+            if (this.config.mode === 'history') {
                 if (!history.pushState || !window.addEventListener) return;
                 on(history, 'pushState', this.pushStateOverride.bind(this));
                 on(history, 'replaceState', this.replaceStateOverride.bind(this));
                 window.addEventListener('popstate', this.handlePopState.bind(this));
-            } else if (this.PRODUCT_CONFIG.mode === 'hash') {
+            } else if (this.config.mode === 'hash') {
                 _.register_hash_event(this.handleHashState.bind(this));
             }
         },
@@ -8531,23 +8539,23 @@
             var _this = this;
 
             setTimeout(function () {
-                if (_this.PRODUCT_CONFIG.mode === 'hash') {
-                    if (_.isFunction(_this.PRODUCT_CONFIG.callback_fn)) {
-                        _this.PRODUCT_CONFIG.callback_fn.call();
+                if (_this.config.mode === 'hash') {
+                    if (_.isFunction(_this.config.callback_fn)) {
+                        _this.config.callback_fn.call();
                         _.innerEvent.trigger('singlePage:change', {
                             oldUrl: _this.url,
                             nowUrl: document.URL
                         });
                         _this.url = document.URL;
                     }
-                } else if (_this.PRODUCT_CONFIG.mode === 'history') {
+                } else if (_this.config.mode === 'history') {
                     var oldPath = _this.path;
                     var newPath = getPath();
                     if (oldPath != newPath && _this.shouldTrackUrlChange(newPath, oldPath)) {
                         _this.path = newPath;
-                        if (historyDidUpdate || _this.PRODUCT_CONFIG.track_replace_state) {
-                            if (typeof _this.PRODUCT_CONFIG.callback_fn === 'function') {
-                                _this.PRODUCT_CONFIG.callback_fn.call();
+                        if (historyDidUpdate || _this.config.track_replace_state) {
+                            if (typeof _this.config.callback_fn === 'function') {
+                                _this.config.callback_fn.call();
                                 _.innerEvent.trigger('singlePage:change', {
                                     oldUrl: _this.url,
                                     nowUrl: document.URL
@@ -8773,16 +8781,16 @@
         /**
          *
          * @param {String} token 上报数据凭证
-         * @param {Object} PRODUCT_CONFIG sdk客户端配置
+         * @param {Object} config sdk客户端配置
          */
-        function SMARTLib(token, PRODUCT_CONFIG) {
+        function SMARTLib(token, config) {
             _classCallCheck$5(this, SMARTLib);
 
             this['__loaded'] = true;
             this._ = _;
-            this['PRODUCT_CONFIG'] = {};
-            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, PRODUCT_CONFIG, {'token': token}));
-            this['local_storage'] = new LOCAL_STORAGE(this['PRODUCT_CONFIG']);
+            this['config'] = {};
+            this._set_config(_.extend({}, DEFAULT_CONFIG, CONFIG, config, {'token': token}));
+            this['local_storage'] = new LOCAL_STORAGE(this['config']);
             // 运行钩子函数
             this._loaded();
             // 实例化拉取远程库对象（按需加载）
@@ -8846,15 +8854,15 @@
             }
             /**
              * 设置配置
-             * @param {Object} PRODUCT_CONFIG
+             * @param {Object} config
              */
 
         }, {
             key: '_set_config',
-            value: function _set_config(PRODUCT_CONFIG) {
-                if (_.isObject(PRODUCT_CONFIG)) {
-                    this['PRODUCT_CONFIG'] = _.extend(this['PRODUCT_CONFIG'], PRODUCT_CONFIG);
-                    SDK_CONFIG.DEBUG = SDK_CONFIG.DEBUG || this._get_config('debug');
+            value: function _set_config(config) {
+                if (_.isObject(config)) {
+                    this['config'] = _.extend(this['config'], config);
+                    CONFIG.DEBUG = CONFIG.DEBUG || this._get_config('debug');
                 }
             }
             /**
@@ -8866,7 +8874,7 @@
         }, {
             key: '_get_config',
             value: function _get_config(prop_name) {
-                return this['PRODUCT_CONFIG'][prop_name];
+                return this['config'][prop_name];
             }
             // sdk初始化之前触发的钩子函数，该方法必须在初始化子模块前以及上报数据前使用
 
@@ -8944,7 +8952,7 @@
             value: function track_event(event_id, event_name, event_type, properties, callback) {
                 this['event'].track(event_id, event_name, event_type, properties, callback);
             }
-        },  {
+        }, {
             key: 'register_event_super_properties',
             value: function register_event_super_properties(prop, to) {
                 var set_props = {};
@@ -9024,34 +9032,30 @@
             value: function current_event_super_properties() {
                 return this.get_property('superProperties');
             }
-            /**
-             * 用户登录和注册时调用
-             * @param {String} user_id
-             */
-
-        }, {
-            key: 'setVisitID',
-            value: function setVisitID(visit_id) {
-                this['event'].setVisitID(visit_id);
-            }
         }, {
             key: 'login',
             value: function login(user_id) {
                 this['event'].login(user_id);
             }
             // 清除本地用户信息，退出用户（选则调用）,建议平台网站不必调用（无需匿名用户的平台）
-
         }, {
             key: 'logout',
             value: function logout() {
                 this['event'].logout();
             }
         }, {
-            key: 'clearVisitID',
-            value: function clearVisitID() {
-                this['event'].clearVisitID();
+            key: 'set_visit_id',
+            value: function set_visit_id(visit_id) {
+                this['event'].set_visit_id(visit_id);
+            }
+        }, {
+            key: 'clear_visit_id',
+            value: function clear_visit_id() {
+                this['event'].clear_visit_id();
             }
         }]);
+
+        console.log(SMARTLib)
 
         return SMARTLib;
     }();
@@ -9105,11 +9109,11 @@
 
         _createClass$6(LoaderSync, [{
             key: 'init',
-            value: function init(token, PRODUCT_CONFIG) {
+            value: function init(token, config) {
                 if (this['__loaded']) {
                     return;
                 }
-                this.instance = new SMARTLib(token, PRODUCT_CONFIG);
+                this.instance = new SMARTLib(token, config);
                 this.instance.init = this['init'];
                 window['iask_web'] = this.instance;
             }

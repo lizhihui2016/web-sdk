@@ -66,6 +66,7 @@
             },
             debug: true,
         });
+
     </script>
 </header>
 <body>
@@ -86,13 +87,13 @@
         iask_web.login(document.getElementById('userId').value);
     }
     document.getElementsByTagName('h2')[0].onclick = function (e) {
-        iask_web.setVisitID(document.getElementById('visitID').value);
+        iask_web.set_visit_id(document.getElementById('visitID').value);
     }
     document.getElementsByTagName('h2')[1].onclick = function (e) {
         iask_web.logout();
     }
     document.getElementsByTagName('h2')[2].onclick = function (e) {
-        iask_web.clearVisitID();
+        iask_web.clear_visit_id();
     }
     document.getElementsByTagName('h2')[3].onclick = function (e) {
         iask_web.track_event('SE002', "buy", "page", {"price": "365.8", "goodID": 'xxxx-xxxx-xxxx'});
