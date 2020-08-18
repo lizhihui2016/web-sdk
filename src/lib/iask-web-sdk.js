@@ -60,7 +60,7 @@
 
     var SDK_CONFIG = {
         DEBUG: false,
-        SDK_VERSION: '0.1.0',      // sdk版本
+        SDK_VERSION: '0.1.0'      // sdk版本
     }
 
     // 系统事件类型（事件分为：系统事件和业务事件）
