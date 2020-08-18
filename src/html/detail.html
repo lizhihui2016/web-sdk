@@ -7,19 +7,7 @@
     <title>详情页</title>
     <script src="../lib/iask-web-sdk.js" charset="utf-8"></script>
     <script>
-        iask_web.init('iask_web', {
-            local_storage: {
-                type: 'localStorage'
-            },
-            SPA: {
-                is: true,
-                mode: 'hash'
-            },
-            // pageview: false,
-            debug: true,
-            loaded: function (sdk) {
-            }
-        });
+        iask_web.init('iask_web', {local_storage: {type: 'localStorage'}, debug: true});
 
         fileVar = {
             "pageID": "PC-O-D",
