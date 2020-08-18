@@ -9056,8 +9056,6 @@
             }
         }]);
 
-        console.log(SMARTLib)
-
         return SMARTLib;
     }();
 
