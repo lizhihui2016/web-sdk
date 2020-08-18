@@ -38,7 +38,7 @@ var PRODUCT_CONFIG = {
     SITE_TYPE: '办公频道',      // 站点类型
     PRODUCT_CODE: '0',         // 产品代码
     PRODUCT_VER: 'V1.0.0',     // 产品版本
-    APP_CHANNEL: '',           // app应用渠道渠道
+    APP_CHANNEL: ''            // app应用渠道渠道
 };
 ```
 
