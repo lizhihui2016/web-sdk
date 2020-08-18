@@ -55,9 +55,10 @@
         PRODUCT_CODE: '0',         // 产品代码
         PRODUCT_VER: 'V1.0.0',     // 产品版本
         APP_CHANNEL: '',           // app应用渠道渠道
+        //----------以上，根据具体业务修改--------------
 
-        DEBUG: false,
-        SDK_VERSION: '0.1.0'      // sdk版本
+        DEBUG: false,              // 不需要修改
+        SDK_VERSION: '0.1.0'       // sdk版本，业务方不需要修改
     };
 
     // 系统事件类型（事件分为：系统事件和业务事件）

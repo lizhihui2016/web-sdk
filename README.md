@@ -32,13 +32,17 @@ iask_web.track_event('SE002', "buy", "page", {"price": "365.8", "goodID": 'xxxx-
 
 ```js
 // 配置产品信息
-var PRODUCT_CONFIG = {
+var CONFIG = {
     TERMINAL_TYPE: '0',        // 终端类型
     PRODUCT_NAME: 'ishare',    // 产品名称
     SITE_TYPE: '办公频道',      // 站点类型
     PRODUCT_CODE: '0',         // 产品代码
     PRODUCT_VER: 'V1.0.0',     // 产品版本
-    APP_CHANNEL: ''            // app应用渠道渠道
+    APP_CHANNEL: '',           // app应用渠道渠道
+    //----------以上，根据具体业务修改--------------
+
+    DEBUG: false,              // 不需要修改
+    SDK_VERSION: '0.1.0'       // sdk版本，业务方不需要修改
 };
 ```
 
@@ -56,12 +60,7 @@ var DEFAULT_CONFIG = {
 所有需要埋点的页面，编写如下代码
 
 ```js
-iask_web.init('iask_web', {
-    local_storage: {
-        type: 'localStorage'
-    },
-    debug: true,
-});
+iask_web.init('iask_web', {local_storage: {type: 'localStorage'}, debug: true});
 ```
 
 5、业务埋点开发
@@ -93,7 +92,7 @@ iask_web.logout();
 当需要设置visitID的值时，需要调用如下代码，以设置visitID的值：
 
 ```js
-iask_web.setVisitID(visitID);  //visitID为具体的访客ID值
+iask_web.set_visit_id(visitID);  //visitID为具体的访客ID值
 ```
 
 9、清空访客ID设置事件
@@ -101,7 +100,7 @@ iask_web.setVisitID(visitID);  //visitID为具体的访客ID值
 当需要清空visitID的值时，需要调用如下代码：
 
 ```js
-iask_web.clearVisitID();
+iask_web.clear_visit_id();
 ```
 
 10、session失效时间设置
