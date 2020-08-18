@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<header>
+    <meta charset="UTF-8">
+    <title>详情页</title>
+    <script src="../lib/iask-web-sdk.js" charset="utf-8"></script>
+    <script>
+        iask_web.init('iask_web', {
+            local_storage: {
+                type: 'localStorage'
+            },
+            SPA: {
+                is: true,
+                mode: 'hash'
+            },
+            // pageview: false,
+            debug: true,
+            loaded: function (sdk) {
+            }
+        });
+
+        fileVar = {
+            "pageID": "PC-O-D",
+            "pageName": "资料详情页",
+            "fileID": "1QIRPha73znP",
+            "fileName": "医院环境与医疗设备清洁消毒要求"
+        }
+
+        iask_web.track_event('SE001', 'fileDetailPageView', 'page', fileVar);
+    </script>
+</header>
+<body>
+<div>
+    <h1>这是资料详情页</h1>
+    <a href="index.html">回到主页</a>
+    <button>常规点击事件</button>
+    <button>立即下载点击事件</button>
+</div>
+<script>
+    domVar = {
+        "domID": 'downClick',
+        "domName": '立即下载'
+    };
+    sClickVar = {
+        "fileID": "1QSMPhky7pqP",
+        "fileName": "财务单页简历模板-01",
+        "fileCategoryID": "10000||14000||14001",
+        "fileCategoryName": "教育资料||高等教育||哲学",
+        "filePayType": "free",
+        "fileFormat": "pdf",
+        "fileProduceType": "user"
+    }
+    document.getElementsByTagName('button')[0].onclick = function (e) {
+        iask_web.track_event('NE002', 'normalClick', 'click', domVar);
+    }
+    document.getElementsByTagName('button')[1].onclick = function (e) {
+       iask_web.track_event('SE003', 'fileDetailDownClick', 'click', sClickVar);
+    }
+</script>
+</body>
+</html>
