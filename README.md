@@ -60,10 +60,6 @@ iask_web.init('iask_web', {
     local_storage: {
         type: 'localStorage'
     },
-    SPA: {
-        is: true,
-        mode: 'hash'
-    },
     debug: true,
 });
 ```
