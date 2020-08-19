@@ -5,8 +5,8 @@
     // 默认配置
     var DEFAULT_CONFIG = {
         // 上报服务器域名配置
-        'track_url': 'http://localhost:3300/',
-        // 'track_url': 'http://192.168.1.158/ishare/bilog',
+        // 'track_url': 'http://localhost:3300/',
+        'track_url': 'http://192.168.1.158/ishare/bilog',
         // debug启动配置
         'debug': false,
         // 本地存储配置
@@ -22,14 +22,14 @@
             'secure_cookie': false,
             // cookie存储时，跨主域名存储配置
             'cross_subdomain_cookie': true,
-            // cookie方法存储时，配置保存过期时间
+            // cookie方法存储时，配置保存过期时间，下面配置是1年
             'cookie_expiration': 31536000
         },
         // 初始化sdk时触发的方法
         'loaded': function loaded() {
         },
         // 上报数据实现形式  post, get, img
-        'track_type': 'img  ',
+        'track_type': '',
         // 单页面应用配置
         'SPA': {
             // 开启SPA配置
@@ -42,7 +42,7 @@
         // 上报数据前，每个字段长度截取配置，默认不截取
         'truncateLength': -1,
         // 会话超时时长，默认30分钟
-        'session_interval_mins': 30,
+        'session_interval_mins': 1,
         // 远程拉取可视化圈选插件地址
         'auto_visualization_src': 'http://localhost:3300/build/plugins/auto_visualization/main.js'
     };
@@ -7873,7 +7873,7 @@
                 var session_start_time = 1 * this.instance.get_property('sessionStartTime') / 1000;
                 var updated_time = 1 * this.instance.get_property('updatedTime') / 1000;
                 var now_date_time_ms = new Date().getTime();
-                var now_date_time_se = 1 * now_date_time_ms / 1000;
+                var now_date_time_se = now_date_time_ms / 1000;
                 // 其它渠道判断
                 var other_channel_Bool = this._check_channel();
                 //会话结束判断
@@ -7961,6 +7961,12 @@
         }, {
             key: 'track',
             value: function track(event_id, event_name, event_type, properties, callback) {
+
+                // 当触发的事件不是这些事件(sessionStart,sessionClose,activate)时，触发检测 session 方法
+                if (['sessionStart', 'sessionClose', 'activate'].indexOf(event_name) === -1) {
+                    this._session();
+                }
+
                 if (_.isUndefined(event_id)) {
                     console.error('上报数据需要一个事件ID');
                     return;
@@ -8039,6 +8045,7 @@
                     sdkVersion: CONFIG.SDK_VERSION,
 
                     loginStatus: this.instance.get_property('loginStatus'),
+                    visitStatus: this.instance.get_property('visitStatus'),
                     visitID: this.instance.get_property('visitID'),
                     userId: this.instance.get_property('userId'),
 
@@ -8080,6 +8087,9 @@
                 }
                 if (!this.instance.get_property('loginStatus')) {
                     data['loginStatus'] = '0';
+                }
+                if (!this.instance.get_property('visitStatus')) {
+                    data['visitStatus'] = '0';
                 }
 
                 //添加IP字段
@@ -8132,11 +8142,19 @@
                     truncated_data = _.truncate(data, truncateLength);
                 }
 
-                console.log('上报的数据（截取后）:', truncated_data);
+
+                console.log('埋点数据（截取后）:', truncated_data);
+
+                //埋点数据校验
+                // truncated_data['visitStatus'] = '1';
+                if (!checkData(truncated_data)) {
+                    return;
+                }
 
                 var callback_fn = function callback_fn(response) {
                     callback(response, data);
                 };
+
                 var url = this.instance._get_config('track_url');
                 var track_type = this.instance._get_config('track_type');
                 if (track_type === 'img') {
@@ -8149,10 +8167,6 @@
                     token: this.instance._get_config('token')
                 }, callback_fn);
 
-                // 当触发的事件不是这些事件(sessionStart,sessionClose,activate)时，触发检测 session 方法
-                if (['sessionStart', 'sessionClose', 'activate'].indexOf(event_name) === -1) {
-                    this._session();
-                }
 
                 // 保存最后一次用户触发事件（除了会话事件以外）的事件id以及时间，通过这个时间确定会话关闭时的时间
                 if (['sessionStart', 'sessionClose'].indexOf(event_name) === -1) {
@@ -8190,12 +8204,14 @@
             key: 'set_visit_id',
             value: function set_visit_id(visit_id) {
                 this['local_storage'].register({'visitID': visit_id});
+                this['local_storage'].register({'visitStatus': '1'});
                 this.track(SYSTEM_EVENT_OBJECT.setVisitID.event_id, SYSTEM_EVENT_OBJECT.setVisitID.event_name, SYSTEM_EVENT_OBJECT.setVisitID.event_type);
             }
         }, {
             key: 'clear_visit_id',
             value: function clear_visit_id() {
                 this['local_storage'].register({'visitID': ''});
+                this['local_storage'].register({'visitStatus': '0'});
                 this.track(SYSTEM_EVENT_OBJECT.clearVisitID.event_id, SYSTEM_EVENT_OBJECT.clearVisitID.event_name, SYSTEM_EVENT_OBJECT.clearVisitID.event_type);
             }
         }]);
@@ -9097,6 +9113,58 @@
             }
         }
         document.getElementsByTagName('head')[0].appendChild(domScript);
+    }
+
+    //埋点数据校验,如果校验失败，会禁止上报
+    function checkData(data) {
+        var pass = true;
+
+        if (data['deviceID'] === '' || !data['deviceID']) {
+            console.error('deviceID 不能为空，禁止上报');
+            pass = false
+        }
+        //激活事件，sessionID可为空
+        if (data['eventName'] === 'activate') {
+        } else {
+            //非激活事件，sessionID不能为空
+            if (data['sessionID'] === '' || !data['sessionID']) {
+                console.error('sessionID 不能为空，禁止上报');
+                pass = false
+            }
+        }
+        if (data['eventID'] === '' || !data['eventID']) {
+            console.error('eventID 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['eventName'] === '' || !data['eventName']) {
+            console.error('eventName 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['eventType'] === '' || !data['eventType']) {
+            console.error('eventType 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['productCode'] === '' || !data['productCode']) {
+            console.error('productCode 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['productName'] === '' || !data['productName']) {
+            console.error('productName 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['productVer'] === '' || !data['productVer']) {
+            console.error('productVer 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['siteType'] === '' || !data['siteType']) {
+            console.error('siteType 不能为空，禁止上报');
+            pass = false
+        }
+        if (data['terminalType'] === '' || !data['terminalType']) {
+            console.error('terminalType 不能为空，禁止上报');
+            pass = false
+        }
+        return pass;
     }
 
     var LoaderSync = function () {
