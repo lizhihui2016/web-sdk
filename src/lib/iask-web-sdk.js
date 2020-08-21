@@ -5,8 +5,8 @@
     // 默认配置
     var DEFAULT_CONFIG = {
         // 上报服务器域名配置
-        // 'track_url': 'http://localhost:3300/',
-        'track_url': 'http://192.168.1.158/ishare/bilog',
+        'track_url': 'http://localhost:3300/',
+        // 'track_url': 'http://192.168.1.158/ishare/bilog',
         // debug启动配置
         'debug': false,
         // 本地存储配置
@@ -6725,7 +6725,6 @@
 
     //获取设备品牌型号等信息
     var ua = window.navigator.userAgent;
-    // var ua = 'Mozilla/5.0 (Linux; U; Android 4.4.4; zh-CN; OPPO R7 Build/KTU84P) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 UCBrowser/10.9.5.729 U3/0.8.0 Mobile Safari/534.30'
     var DEVICEINFO = new userAgent(ua);
 
     var utf8Encode = function utf8Encode(string) {
@@ -7229,6 +7228,12 @@
         },
 
         properties: function properties() {
+            var browserVer = '';
+            //兼容sougou浏览器，DEVICEINFO.browser无original字段问题
+            if (DEVICEINFO.browser.version != null) {
+                browserVer = DEVICEINFO.browser.version.original;
+            }
+
             return {
                 // 设备型号
                 deviceBrand: DEVICEINFO.device.manufacturer,
@@ -7242,7 +7247,7 @@
                 // 浏览器名称
                 browser: DEVICEINFO.browser.name,
                 // 浏览器版本
-                browserVer: DEVICEINFO.browser.version.original,
+                browserVer: browserVer,
                 // 页面标题
                 title: win$1.document.title || '',
                 // 页面路径
@@ -7256,7 +7261,7 @@
                 // referrer 域名
                 prePageDomain: this.domain(win$1.document.referrer),
                 // 本地语言
-                deviceLanguage: win$1.navigator.language || '',
+                deviceLanguage: (win$1.navigator.language || win$1.navigator.browserLanguage).toLowerCase() || '',
                 // 客户端分辨率 width
                 screenWidth: win$1.screen.width,
                 // 客户端分辨率 height
@@ -7680,7 +7685,7 @@
                     // 页面打开场景, 默认 Browser
                     pageOpenScene: 'Browser',
                     // 自定义用户属性
-                    var: properties
+                    'var': properties
                 };
 
                 // 合并渠道推广信息
@@ -8044,6 +8049,8 @@
                     terminalType: '0',
                     sdkVersion: CONFIG.SDK_VERSION,
 
+                    ip: '' + this.instance.get_property('ip') + '',
+
                     loginStatus: this.instance.get_property('loginStatus'),
                     visitStatus: this.instance.get_property('visitStatus'),
                     visitID: this.instance.get_property('visitID'),
@@ -8075,7 +8082,7 @@
                     // 当前关闭的会话时长
                     sessionTotalLength: properties.sessionTotalLength,
                     // 事件自定义属性
-                    var: user_set_properties,
+                    'var': user_set_properties
                 };
 
                 // userID、visitID和loginStatus 值初始化
@@ -8091,11 +8098,6 @@
                 if (!this.instance.get_property('visitStatus')) {
                     data['visitStatus'] = '0';
                 }
-
-                //添加IP字段
-                loadJS('http://pv.sohu.com/cityjson?ie=utf-8', function () {
-                    data['ip'] = returnCitySN['cip'];
-                });
 
                 // 合并客户端信息
                 data = _.extend({}, data, _.info.properties());
@@ -8145,8 +8147,6 @@
 
                 console.log('埋点数据（截取后）:', truncated_data);
 
-                //埋点数据校验
-                // truncated_data['visitStatus'] = '1';
                 if (!checkData(truncated_data)) {
                     return;
                 }
@@ -8821,6 +8821,8 @@
             // 设置设备凭证
             this._set_device_id();
 
+            this._set_ip();
+
             // 上报广告点击事件
             if (this['channel'].check_ad_click()) {
                 this._ad_click();
@@ -8909,6 +8911,17 @@
              * 若是首次访问（本地无设备凭证），上报用户首次访问网站事件
              */
 
+        }, {
+            key: '_set_ip',
+            value: function _set_ip() {
+                if (this.get_device_id()) {
+                    var _this = this;
+                    loadJS('http://pv.sohu.com/cityjson?ie=utf-8', function () {
+                        _this['local_storage'].register({'ip': returnCitySN['cip']});
+                    });
+
+                }
+            }
         }, {
             key: '_set_device_id',
             value: function _set_device_id() {
@@ -9100,19 +9113,23 @@
     }
 
     //加载外部JS
-    function loadJS(url, success) {
-        var domScript = document.createElement('script');
-        domScript.src = url;
-        success = success || function () {
-        };
-        domScript.onload = domScript.onreadystatechange = function () {
-            if (!this.readyState || 'loaded' === this.readyState || 'complete' === this.readyState) {
-                success();
-                this.onload = this.onreadystatechange = null;
-                this.parentNode.removeChild(this);
-            }
+    function loadJS(url, callback) {
+        var script = document.createElement("script")
+        if (script.readyState) { //IE
+            script.onreadystatechange = function () {
+                if (script.readyState == "loaded" ||
+                    script.readyState == "complete") {
+                    script.onreadystatechange = null;
+                    callback();
+                }
+            };
+        } else { //Others: Firefox, Safari, Chrome, and Opera
+            script.onload = function () {
+                callback();
+            };
         }
-        document.getElementsByTagName('head')[0].appendChild(domScript);
+        script.src = url;
+        document.getElementsByTagName('head')[0].appendChild(script);
     }
 
     //埋点数据校验,如果校验失败，会禁止上报
@@ -9120,7 +9137,7 @@
         var pass = true;
 
         if (data['deviceID'] === '' || !data['deviceID']) {
-            console.error('deviceID 不能为空，禁止上报');
+            console.error('deviceID 为空，禁止上报');
             pass = false
         }
         //激活事件，sessionID可为空
@@ -9128,40 +9145,40 @@
         } else {
             //非激活事件，sessionID不能为空
             if (data['sessionID'] === '' || !data['sessionID']) {
-                console.error('sessionID 不能为空，禁止上报');
+                console.error('sessionID 为空，禁止上报');
                 pass = false
             }
         }
         if (data['eventID'] === '' || !data['eventID']) {
-            console.error('eventID 不能为空，禁止上报');
+            console.error('eventID 为空，禁止上报');
             pass = false
         }
         if (data['eventName'] === '' || !data['eventName']) {
-            console.error('eventName 不能为空，禁止上报');
+            console.error('eventName 为空，禁止上报');
             pass = false
         }
         if (data['eventType'] === '' || !data['eventType']) {
-            console.error('eventType 不能为空，禁止上报');
+            console.error('eventType 为空，禁止上报');
             pass = false
         }
         if (data['productCode'] === '' || !data['productCode']) {
-            console.error('productCode 不能为空，禁止上报');
+            console.error('productCode 为空，禁止上报');
             pass = false
         }
         if (data['productName'] === '' || !data['productName']) {
-            console.error('productName 不能为空，禁止上报');
+            console.error('productName 为空，禁止上报');
             pass = false
         }
         if (data['productVer'] === '' || !data['productVer']) {
-            console.error('productVer 不能为空，禁止上报');
+            console.error('productVer 为空，禁止上报');
             pass = false
         }
         if (data['siteType'] === '' || !data['siteType']) {
-            console.error('siteType 不能为空，禁止上报');
+            console.error('siteType 为空，禁止上报');
             pass = false
         }
         if (data['terminalType'] === '' || !data['terminalType']) {
-            console.error('terminalType 不能为空，禁止上报');
+            console.error('terminalType 为空，禁止上报');
             pass = false
         }
         return pass;
