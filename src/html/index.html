@@ -60,39 +60,39 @@
     </style>
     <script src="../lib/iask-web-sdk.js" charset="utf-8"></script>
     <script>
-        iask_web.init('iask_web', {local_storage: {type: 'localStorage'}, debug: true});
+        var visitID = '265989132567913';
+        iask_web.init('iask_web', {
+            local_storage: {
+                type: 'localStorage'
+            },
+            loaded: function (sdk) {
+                sdk.set_visit_id(visitID);
+            }
+        });
     </script>
 </header>
 <body>
 <div style="clear:both;">
     <input id="userId" placeholder="请输入用户名称">
-    <input id="visitID" placeholder="请输入访客ID">
-    <h1>测试登录</h1>
-    <h2>测试访客ID</h2>
+    <h2>测试登录</h2>
     <h2>测试退出</h2>
-    <h2>测试清除visitID</h2>
     <h2>测试用户自定义事件</h2>
     <h2>设置用户自定义属性</h2>
-    <a href="detail.html">进入资料详情页</a>
+    <a href="detail.html?utm_source=baidu&utm_medium=myht-zt&utm_campaign=jgmyht&utm_term=jgmyht">utm测试</a>
+    <a href="detail.html">资料详情页</a>
 </div>
 
 <script>
-    document.getElementsByTagName('h1')[0].onclick = function (e) {
-        iask_web.login(document.getElementById('userId').value);
-    }
     document.getElementsByTagName('h2')[0].onclick = function (e) {
-        iask_web.set_visit_id(document.getElementById('visitID').value);
+        iask_web.login(document.getElementById('userId').value);
     }
     document.getElementsByTagName('h2')[1].onclick = function (e) {
         iask_web.logout();
     }
     document.getElementsByTagName('h2')[2].onclick = function (e) {
-        iask_web.clear_visit_id();
+        iask_web.track_event('SE002', "buy", "page", {"price": "￥123", "id": 'xxxx-xxxx-xxxx'});
     }
     document.getElementsByTagName('h2')[3].onclick = function (e) {
-        iask_web.track_event('SE002', "buy", "page", {"price": "365.8", "goodID": 'xxxx-xxxx-xxxx'});
-    }
-    document.getElementsByTagName('h2')[4].onclick = function (e) {
         iask_web.user.set({
             "name": "汪洋",
             "country": "中国",

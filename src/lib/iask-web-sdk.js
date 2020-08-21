@@ -8,7 +8,7 @@
         'track_url': 'http://localhost:3300/',
         // 'track_url': 'http://192.168.1.158/ishare/bilog',
         // debug启动配置
-        'debug': false,
+        'debug': true,
         // 本地存储配置
         'local_storage': {
             // 存储方式  localStorage || cookie
@@ -47,18 +47,24 @@
         'auto_visualization_src': 'http://localhost:3300/build/plugins/auto_visualization/main.js'
     };
 
-    // 配置产品信息
-    var CONFIG = {
+    // 配置产品信息,业务方根据具体情况修改
+    var PRODUCT_CONFIG = {
         TERMINAL_TYPE: '0',        // 终端类型
         PRODUCT_NAME: 'ishare',    // 产品名称
         SITE_TYPE: '办公频道',      // 站点类型
         PRODUCT_CODE: '0',         // 产品代码
         PRODUCT_VER: 'V1.0.0',     // 产品版本
         APP_CHANNEL: '',           // app应用渠道渠道
-        //----------以上，根据具体业务修改--------------
+    };
 
-        DEBUG: false,              // 不需要修改
+    //SDK信息配置
+    var SDK_CONFIG = {
         SDK_VERSION: '0.1.0'       // sdk版本，业务方不需要修改
+    };
+
+    //系统配置
+    var SYSTEM_CONFIG = {
+        DEBUG: true
     };
 
     // 系统事件类型（事件分为：系统事件和业务事件）
@@ -7255,7 +7261,7 @@
                 // 页面url
                 pageURL: document.URL,
                 // 域名
-                currentDomain: this.domain(document.URL),
+                domain: this.domain(document.URL),
                 // referrer 数据来源
                 prePageURL: win$1.document.referrer,
                 // referrer 域名
@@ -7585,7 +7591,7 @@
     var console = {
         /** @type {function(...[*])} */
         log: function log() {
-            if (CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
+            if (SYSTEM_CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
                 try {
                     windowConsole.log.apply(windowConsole, arguments);
                 } catch (err) {
@@ -7597,7 +7603,7 @@
         },
         /** @type {function(...[*])} */
         error: function error() {
-            if (CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
+            if (SYSTEM_CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
                 var args = ['DATracker error:'].concat(_.toArray(arguments));
                 try {
                     windowConsole.error.apply(windowConsole, args);
@@ -7677,7 +7683,7 @@
                     // 上报时间
                     reportTime: new Date().getTime(),
                     // 终端类型 （js，小程序、安卓、IOS、server、pc）
-                    terminalType: CONFIG.TERMINAL_TYPE,
+                    terminalType: PRODUCT_CONFIG.TERMINAL_TYPE,
                     // 属性事件id
                     peopleID: PEOPLE_PROPERTY_ID,
                     // 用户首次访问时间
@@ -7967,8 +7973,8 @@
             key: 'track',
             value: function track(event_id, event_name, event_type, properties, callback) {
 
-                // 当触发的事件不是这些事件(sessionStart,sessionClose,activate)时，触发检测 session 方法
-                if (['sessionStart', 'sessionClose', 'activate'].indexOf(event_name) === -1) {
+                // 当触发的事件不是这些事件(sessionStart,sessionClose)时，触发检测 session 方法
+                if (['sessionStart', 'sessionClose'].indexOf(event_name) === -1) {
                     this._session();
                 }
 
@@ -8047,12 +8053,11 @@
 
                     // sdk类型 （js，小程序、安卓、IOS、server、pc）
                     terminalType: '0',
-                    sdkVersion: CONFIG.SDK_VERSION,
+                    sdkVersion: SDK_CONFIG.SDK_VERSION,
 
                     ip: '' + this.instance.get_property('ip') + '',
 
                     loginStatus: this.instance.get_property('loginStatus'),
-                    visitStatus: this.instance.get_property('visitStatus'),
                     visitID: this.instance.get_property('visitID'),
                     userId: this.instance.get_property('userId'),
 
@@ -8060,11 +8065,11 @@
                     sessionID: this.instance.get_property('sessionID'),
 
                     //产品信息
-                    productName: CONFIG.PRODUCT_NAME,
-                    productCode: CONFIG.PRODUCT_CODE,
-                    productVer: CONFIG.PRODUCT_VER,
-                    siteType: CONFIG.SITE_TYPE,
-                    appChannel: CONFIG.APP_CHANNEL,
+                    productName: PRODUCT_CONFIG.PRODUCT_NAME,
+                    productCode: PRODUCT_CONFIG.PRODUCT_CODE,
+                    productVer: PRODUCT_CONFIG.PRODUCT_VER,
+                    siteType: PRODUCT_CONFIG.SITE_TYPE,
+                    appChannel: PRODUCT_CONFIG.APP_CHANNEL,
 
                     // 用户首次访问时间
                     persistedTime: this.instance.get_property('persistedTime'),
@@ -8094,9 +8099,6 @@
                 }
                 if (!this.instance.get_property('loginStatus')) {
                     data['loginStatus'] = '0';
-                }
-                if (!this.instance.get_property('visitStatus')) {
-                    data['visitStatus'] = '0';
                 }
 
                 // 合并客户端信息
@@ -8199,20 +8201,6 @@
                 this['local_storage'].register({'userId': ''});
                 this['local_storage'].register({'loginStatus': '0'});
                 this.track(SYSTEM_EVENT_OBJECT.logout.event_id, SYSTEM_EVENT_OBJECT.logout.event_name, SYSTEM_EVENT_OBJECT.logout.event_type);
-            }
-        }, {
-            key: 'set_visit_id',
-            value: function set_visit_id(visit_id) {
-                this['local_storage'].register({'visitID': visit_id});
-                this['local_storage'].register({'visitStatus': '1'});
-                this.track(SYSTEM_EVENT_OBJECT.setVisitID.event_id, SYSTEM_EVENT_OBJECT.setVisitID.event_name, SYSTEM_EVENT_OBJECT.setVisitID.event_type);
-            }
-        }, {
-            key: 'clear_visit_id',
-            value: function clear_visit_id() {
-                this['local_storage'].register({'visitID': ''});
-                this['local_storage'].register({'visitStatus': '0'});
-                this.track(SYSTEM_EVENT_OBJECT.clearVisitID.event_id, SYSTEM_EVENT_OBJECT.clearVisitID.event_name, SYSTEM_EVENT_OBJECT.clearVisitID.event_type);
             }
         }]);
 
@@ -8806,7 +8794,7 @@
             this['__loaded'] = true;
             this._ = _;
             this['config'] = {};
-            this._set_config(_.extend({}, DEFAULT_CONFIG, CONFIG, config, {'token': token}));
+            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, SDK_CONFIG, SYSTEM_CONFIG, config, {'token': token}));
             this['local_storage'] = new LOCAL_STORAGE(this['config']);
             // 运行钩子函数
             this._loaded();
@@ -8818,17 +8806,22 @@
             this['user'] = new USER_TRACK(this);
             // 实例化渠道跟踪对象
             this['channel'] = new CHANNEL(this);
-            // 设置设备凭证
-            this._set_device_id();
 
             this._set_ip();
 
-            // 上报广告点击事件
-            if (this['channel'].check_ad_click()) {
-                this._ad_click();
-            }
+            var _this = this;
+            //延迟1秒，以等待IP存储localStorage
+            setTimeout(function () {
+                // 设置设备凭证
+                _this._set_device_id();
 
-            this._track_pv();
+                // 上报广告点击事件
+                if (_this['channel'].check_ad_click()) {
+                    _this._ad_click();
+                }
+
+                _this._track_pv();
+            }, 1000)
 
             // persistedTime 首次访问应用时间
             this['local_storage'].register_once({'persistedTime': new Date().getTime()}, '');
@@ -8881,7 +8874,7 @@
             value: function _set_config(config) {
                 if (_.isObject(config)) {
                     this['config'] = _.extend(this['config'], config);
-                    CONFIG.DEBUG = CONFIG.DEBUG || this._get_config('debug');
+                    SYSTEM_CONFIG.DEBUG = SYSTEM_CONFIG.DEBUG || this._get_config('debug');
                 }
             }
             /**
@@ -8914,13 +8907,10 @@
         }, {
             key: '_set_ip',
             value: function _set_ip() {
-                if (this.get_device_id()) {
-                    var _this = this;
-                    loadJS('http://pv.sohu.com/cityjson?ie=utf-8', function () {
-                        _this['local_storage'].register({'ip': returnCitySN['cip']});
-                    });
-
-                }
+                var _this = this;
+                loadJS('http://pv.sohu.com/cityjson?ie=utf-8', function () {
+                    _this['local_storage'].register({'ip': returnCitySN['cip']});
+                });
             }
         }, {
             key: '_set_device_id',
@@ -8981,6 +8971,16 @@
             key: 'track_event',
             value: function track_event(event_id, event_name, event_type, properties, callback) {
                 this['event'].track(event_id, event_name, event_type, properties, callback);
+            }
+        }, {
+            key: 'set_visit_id',
+            value: function set_visit_id(visitID) {
+                this['local_storage'].register({'visitID': visitID});
+            }
+        }, {
+            key: 'clear_visit_id',
+            value: function clear_visit_id() {
+                this['local_storage'].register({'visitID': ''});
             }
         }, {
             key: 'register_event_super_properties',
@@ -9072,16 +9072,6 @@
             key: 'logout',
             value: function logout() {
                 this['event'].logout();
-            }
-        }, {
-            key: 'set_visit_id',
-            value: function set_visit_id(visit_id) {
-                this['event'].set_visit_id(visit_id);
-            }
-        }, {
-            key: 'clear_visit_id',
-            value: function clear_visit_id() {
-                this['event'].clear_visit_id();
             }
         }]);
 

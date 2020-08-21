@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-</head>
 <header>
     <meta charset="UTF-8">
     <title>详情页</title>
     <script src="../lib/iask-web-sdk.js" charset="utf-8"></script>
     <script>
-        iask_web.init('iask_web', {local_storage: {type: 'localStorage'}, debug: true});
+        var visitID = '265989132567913';
+        iask_web.init('iask_web', {
+            local_storage: {
+                type: 'localStorage'
+            },
+            loaded: function (sdk) {
+                sdk.set_visit_id(visitID);
+            }
+        });
 
         fileVar = {
             "pageID": "PC-O-D",
