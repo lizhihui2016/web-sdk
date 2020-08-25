@@ -7,7 +7,7 @@
 
 （2） 埋点开发代码少，业务埋点只需要编写一段代码：
 
-      iask_web.track_event('事件ID'， '事件名称'， '事件类型'， '业务字段')
+      iask_web.track_event('事件ID'， '事件名称'， '事件类型'， '事件字段')
 
 （3） 自动数据校验，减少测试人员工作量
 
@@ -84,9 +84,9 @@ iask_web.init('iask_web', {
 5、业务埋点开发
 完成埋点初始化后，具体业务埋点开发，只需编写track_event事件：
 
-iask_web.track_event('事件ID'， '事件名称'， '事件类型'， '业务字段var')
+iask_web.track_event('事件ID'， '事件名称'， '事件类型'， '事件字段')
 
-注意：事件ID、事件名称、事件类型为必填参数，如果没有业务字段，业务字段可以不传参
+注意：事件ID、事件名称、事件类型为必填参数，如果没有事件字段，事件字段可以不传参
 
 //购买点击事件demo举例
 document.getElementsByTagName('h2')[3].onclick = function (e) {

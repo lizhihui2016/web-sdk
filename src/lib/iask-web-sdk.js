@@ -29,7 +29,7 @@
         'loaded': function loaded() {
         },
         // 上报数据实现形式  post, get, img
-        'track_type': '',
+        'track_type': ' ',
         // 单页面应用配置
         'SPA': {
             // 开启SPA配置
@@ -51,11 +51,14 @@
     var PRODUCT_CONFIG = {
         TERMINAL_TYPE: '0',        // 终端类型
         PRODUCT_NAME: 'ishare',    // 产品名称
-        SITE_TYPE: '办公频道',      // 站点类型
+        SITE_TYPE: 'office',       // 站点类型
         PRODUCT_CODE: '0',         // 产品代码
         PRODUCT_VER: 'V1.0.0',     // 产品版本
-        APP_CHANNEL: ''           // app应用渠道渠道
     };
+
+    var APP_CONFIG = {
+        APP_CHANNEL: ''           // app应用渠道渠道
+    }
 
     //SDK信息配置
     var SDK_CONFIG = {
@@ -7613,7 +7616,20 @@
                     });
                 }
             }
+        },
+        warn: function warn() {
+            if (SYSTEM_CONFIG.DEBUG && !_.isUndefined(windowConsole) && windowConsole) {
+                var args = ['DATracker warn:'].concat(_.toArray(arguments));
+                try {
+                    windowConsole.warn.apply(windowConsole, args);
+                } catch (err) {
+                    _.each(args, function (arg) {
+                        windowConsole.warn(arg);
+                    });
+                }
+            }
         }
+
     };
 
     var _createClass = function () {
@@ -8042,7 +8058,7 @@
                 // 上报数据
                 var data = {
                     trackId: Number(String(Math.random()).slice(2, 8) + String(Math.random()).slice(2, 6) + String((new Date()).getTime()).slice(-4)),
-                    eventType: event_type,
+                    eventType: event_type.toLowerCase(),
                     eventID: event_id,
                     // 事件名称
                     eventName: event_name,
@@ -8069,7 +8085,7 @@
                     productCode: PRODUCT_CONFIG.PRODUCT_CODE,
                     productVer: PRODUCT_CONFIG.PRODUCT_VER,
                     siteType: PRODUCT_CONFIG.SITE_TYPE,
-                    appChannel: PRODUCT_CONFIG.APP_CHANNEL,
+                    appChannel: APP_CONFIG.APP_CHANNEL,
 
                     // 用户首次访问时间
                     persistedTime: this.instance.get_property('persistedTime'),
@@ -8087,7 +8103,7 @@
                     // 当前关闭的会话时长
                     sessionTotalLength: properties.sessionTotalLength,
                     // 事件自定义属性
-                    'var': user_set_properties
+                    'var': properties
                 };
 
                 // userID、visitID和loginStatus 值初始化
@@ -8146,8 +8162,7 @@
                     truncated_data = _.truncate(data, truncateLength);
                 }
 
-
-                console.log('埋点数据（截取后）:', truncated_data);
+                console.log('上报前的埋点数据:', truncated_data);
 
                 if (!checkData(truncated_data)) {
                     return;
@@ -8164,11 +8179,22 @@
                 }
 
                 //数据上报
-                _.sendRequest(url, track_type, {
-                    data: _.base64Encode(_.JSONEncode(truncated_data)),
-                    token: this.instance._get_config('token')
-                }, callback_fn);
-
+                var _this = this;
+                if (truncated_data['ip'] === 'undefined' || truncated_data['ip'] === '') {
+                    //如果从localStorage没有抓到ip，可能是ip库还没来得及解析，所以延迟1秒上报
+                    setTimeout(function() {
+                        truncated_data['ip'] = '' + _this.instance.get_property('ip') + '';
+                        _.sendRequest(url, track_type, {
+                            data: _.base64Encode(_.JSONEncode(truncated_data)),
+                            token: _this.instance._get_config('token')
+                        }, callback_fn);
+                    }, 1000)
+                } else {
+                    _.sendRequest(url, track_type, {
+                        data: _.base64Encode(_.JSONEncode(truncated_data)),
+                        token: _this.instance._get_config('token')
+                    }, callback_fn);
+                }
 
                 // 保存最后一次用户触发事件（除了会话事件以外）的事件id以及时间，通过这个时间确定会话关闭时的时间
                 if (['sessionStart', 'sessionClose'].indexOf(event_name) === -1) {
@@ -8794,7 +8820,7 @@
             this['__loaded'] = true;
             this._ = _;
             this['config'] = {};
-            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, SDK_CONFIG, SYSTEM_CONFIG, config, {'token': token}));
+            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, SDK_CONFIG, APP_CONFIG, SYSTEM_CONFIG, config, {'token': token}));
             this['local_storage'] = new LOCAL_STORAGE(this['config']);
             // 运行钩子函数
             this._loaded();
@@ -8810,18 +8836,16 @@
             this._set_ip();
 
             var _this = this;
-            //延迟1秒，以等待IP存储localStorage
-            setTimeout(function () {
-                // 设置设备凭证
-                _this._set_device_id();
 
-                // 上报广告点击事件
-                if (_this['channel'].check_ad_click()) {
-                    _this._ad_click();
-                }
+            // 设置设备凭证
+            _this._set_device_id();
 
-                _this._track_pv();
-            }, 1000)
+            // 上报广告点击事件
+            if (_this['channel'].check_ad_click()) {
+                _this._ad_click();
+            }
+
+            _this._track_pv();
 
             // persistedTime 首次访问应用时间
             this['local_storage'].register_once({'persistedTime': new Date().getTime()}, '');
@@ -8975,7 +8999,9 @@
         }, {
             key: 'set_visit_id',
             value: function set_visit_id(visitID) {
-                this['local_storage'].register({'visitID': visitID});
+                if (visitID !== '' && visitID != null) {
+                    this['local_storage'].register({'visitID': visitID});
+                }
             }
         }, {
             key: 'clear_visit_id',
@@ -9170,6 +9196,29 @@
         if (data['terminalType'] === '' || !data['terminalType']) {
             console.error('terminalType 为空，禁止上报');
             pass = false
+        }
+        if (!isObject(data['var'])) {
+            console.warn('事件字段必须为json对象');
+            pass = false;
+        }
+        if (isObject(data['var'])) {
+            _.each(data['var'], function (v, k) {
+                if (k === '') {
+                    console.error('事件字段里，键名不能为空');
+                    pass = false;
+                }
+                if (k === null) {
+                    console.error('事件字段里，键名不能为null');
+                    pass = false;
+                }
+                if (v === '') {
+                    console.warn('事件字段里，' + k + ' 的值为空');
+                }
+                if (v == null) {
+                    console.error('事件字段里，' + k + ' 的值不能为null');
+                    pass = false;
+                }
+            });
         }
         return pass;
     }
