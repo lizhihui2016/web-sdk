@@ -5,8 +5,7 @@
     // 默认配置
     var DEFAULT_CONFIG = {
         // 上报服务器域名配置
-        'track_url': 'http://localhost:3300/',
-        // 'track_url': 'http://192.168.1.158/ishare/bilog',
+        'track_url': 'http://192.168.1.158/iask/bilog',
         // debug启动配置
         'debug': true,
         // 本地存储配置
@@ -29,7 +28,7 @@
         'loaded': function loaded() {
         },
         // 上报数据实现形式  post, get, img
-        'track_type': ' ',
+        'track_type': 'post',
         // 单页面应用配置
         'SPA': {
             // 开启SPA配置
@@ -42,7 +41,7 @@
         // 上报数据前，每个字段长度截取配置，默认不截取
         'truncateLength': -1,
         // 会话超时时长，默认30分钟
-        'session_interval_mins': 1,
+        'session_interval_mins': 30,
         // 远程拉取可视化圈选插件地址
         'auto_visualization_src': 'http://localhost:3300/build/plugins/auto_visualization/main.js'
     };
@@ -62,7 +61,7 @@
 
     //SDK信息配置
     var SDK_CONFIG = {
-        SDK_VERSION: '0.1.0'       // sdk版本，业务方不需要修改
+        SDK_VERSION: '1.0.0'       // sdk版本，业务方不需要修改
     };
 
     //系统配置
@@ -7246,7 +7245,7 @@
             return {
                 // 设备型号
                 deviceBrand: DEVICEINFO.device.manufacturer,
-                deviceModel: DEVICEINFO.device.model,
+                deviceModel: DEVICEINFO.device.model || '',
                 // 操作系统
                 osType: DEVICEINFO.os.name,
                 // 操作系统版本
@@ -7404,67 +7403,73 @@
         }
     };
 
-    // uuid
     _.UUID = function () {
-        var T = function T() {
-            var d = 1 * new Date(),
-                i = 0;
-            while (d == 1 * new Date()) {
-                i++;
-            }
-            return d.toString(16) + i.toString(16);
-        };
-        var R = function R() {
-            return Math.random().toString(16).replace('.', '');
-        };
-        var UA = function UA(n) {
-            var ua = navigator.userAgent,
-                i,
-                ch,
-                buffer = [],
-                ret = 0;
-
-            function xor(result, byte_array) {
-                var j,
-                    tmp = 0;
-                for (j = 0; j < byte_array.length; j++) {
-                    tmp |= buffer[j] << j * 8;
-                }
-                return result ^ tmp;
-            }
-
-            for (i = 0; i < ua.length; i++) {
-                ch = ua.charCodeAt(i);
-                buffer.unshift(ch & 0xFF);
-                if (buffer.length >= 4) {
-                    ret = xor(ret, buffer);
-                    buffer = [];
-                }
-            }
-
-            if (buffer.length > 0) {
-                ret = xor(ret, buffer);
-            }
-
-            return ret.toString(16);
-        };
-
         return function () {
-            // 有些浏览器取个屏幕宽度都异常...
-            var se = String(screen.height * screen.width);
-            if (se && /\d{5,}/.test(se)) {
-                se = se.toString(16);
-            } else {
-                se = String(Math.random() * 31242).replace('.', '').slice(0, 8);
-            }
-            var val = T() + '-' + R() + '-' + UA() + '-' + se + '-' + T();
-            if (val) {
-                return val;
-            } else {
-                return (String(Math.random()) + String(Math.random()) + String(Math.random())).slice(2, 15);
-            }
+            return "" + Date.now() + '-' + Math.floor(1e7 * Math.random()) + '-' + Math.random().toString(16).replace('.', '') + '-' + String(Math.random() * 31242).replace('.', '').slice(0, 8);
         };
     }();
+
+    // uuid
+    // _.UUID = function () {
+    //     var T = function T() {
+    //         var d = 1 * new Date(),
+    //             i = 0;
+    //         while (d == 1 * new Date()) {
+    //             i++;
+    //         }
+    //         return d.toString(16) + i.toString(16);
+    //     };
+    //     var R = function R() {
+    //         return Math.random().toString(16).replace('.', '');
+    //     };
+    //     var UA = function UA(n) {
+    //         var ua = navigator.userAgent,
+    //             i,
+    //             ch,
+    //             buffer = [],
+    //             ret = 0;
+    //
+    //         function xor(result, byte_array) {
+    //             var j,
+    //                 tmp = 0;
+    //             for (j = 0; j < byte_array.length; j++) {
+    //                 tmp |= buffer[j] << j * 8;
+    //             }
+    //             return result ^ tmp;
+    //         }
+    //
+    //         for (i = 0; i < ua.length; i++) {
+    //             ch = ua.charCodeAt(i);
+    //             buffer.unshift(ch & 0xFF);
+    //             if (buffer.length >= 4) {
+    //                 ret = xor(ret, buffer);
+    //                 buffer = [];
+    //             }
+    //         }
+    //
+    //         if (buffer.length > 0) {
+    //             ret = xor(ret, buffer);
+    //         }
+    //
+    //         return ret.toString(16);
+    //     };
+    //
+    //     return function () {
+    //         // 有些浏览器取个屏幕宽度都异常...
+    //         var se = String(screen.height * screen.width);
+    //         if (se && /\d{5,}/.test(se)) {
+    //             se = se.toString(16);
+    //         } else {
+    //             se = String(Math.random() * 31242).replace('.', '').slice(0, 8);
+    //         }
+    //         var val = T() + '-' + R() + '-' + UA() + '-' + se + '-' + T();
+    //         if (val) {
+    //             return val;
+    //         } else {
+    //             return (String(Math.random()) + String(Math.random()) + String(Math.random())).slice(2, 15);
+    //         }
+    //     };
+    // }();
 
     // 存储方法封装 localStorage  cookie
     _.localStorage = {
@@ -7734,7 +7739,7 @@
                 }
                 _.sendRequest(url, track_type, {
                     data: _.base64Encode(_.JSONEncode(truncated_data)),
-                    token: this.instance._get_config('token')
+                    sdk_token: this.instance._get_config('sdk_token')
                 }, callback_fn);
             }
             /**
@@ -7860,7 +7865,7 @@
                     sessionID: _.UUID(),
                     sessionStartTime: new Date().getTime()
                 });
-                this.track(SYSTEM_EVENT_OBJECT.sessionStart.event_id, SYSTEM_EVENT_OBJECT.sessionStart.event_name, SYSTEM_EVENT_OBJECT.sessionStart.event_type);
+                // this.track(SYSTEM_EVENT_OBJECT.sessionStart.event_id, SYSTEM_EVENT_OBJECT.sessionStart.event_name, SYSTEM_EVENT_OBJECT.sessionStart.event_type);
             }
             /**
              * TODO
@@ -7882,12 +7887,12 @@
                     time = LASTEVENT.time + 1;
                 }
                 var sessionTotalLength = time - sessionStartTime;
-                if (sessionTotalLength >= 0) {
-                    this.track(SYSTEM_EVENT_OBJECT.sessionClose.event_id, SYSTEM_EVENT_OBJECT.sessionClose.event_name, SYSTEM_EVENT_OBJECT.sessionClose.event_type, {
-                        sessionCloseTime: time,
-                        sessionTotalLength: sessionTotalLength
-                    });
-                }
+                // if (sessionTotalLength >= 0) {
+                //     this.track(SYSTEM_EVENT_OBJECT.sessionClose.event_id, SYSTEM_EVENT_OBJECT.sessionClose.event_name, SYSTEM_EVENT_OBJECT.sessionClose.event_type, {
+                //         sessionCloseTime: time,
+                //         sessionTotalLength: sessionTotalLength
+                //     });
+                // }
             }
             /**
              * 判断会话重新开启
@@ -7901,10 +7906,8 @@
                 var updated_time = 1 * this.instance.get_property('updatedTime') / 1000;
                 var now_date_time_ms = new Date().getTime();
                 var now_date_time_se = now_date_time_ms / 1000;
-                // 其它渠道判断
-                var other_channel_Bool = this._check_channel();
                 //会话结束判断
-                if (session_start_time === 0 || now_date_time_se > updated_time + 60 * this.instance._get_config('session_interval_mins') || other_channel_Bool) {
+                if (session_start_time === 0 || now_date_time_se > updated_time + 60 * this.instance._get_config('session_interval_mins')) {
                     // 当会话首次开始时，不用发送会话关闭事件
                     if (session_start_time === 0) {
                         // 新打开一个会话
@@ -8068,7 +8071,7 @@
                     // reportTime: time,
 
                     // sdk类型 （js，小程序、安卓、IOS、server、pc）
-                    terminalType: '0',
+                    terminalType: PRODUCT_CONFIG.TERMINAL_TYPE,
                     sdkVersion: SDK_CONFIG.SDK_VERSION,
 
                     ip: '' + this.instance.get_property('ip') + '',
@@ -8098,7 +8101,7 @@
                     // 页面打开场景, 默认 Browser
                     pageOpenScene: 'Browser',
                     // 应用凭证
-                    token: this.instance._get_config('token'),
+                    sdk_token: this.instance._get_config('sdk_token'),
                     costTime: costTime,
                     // 当前关闭的会话时长
                     sessionTotalLength: properties.sessionTotalLength,
@@ -8186,13 +8189,13 @@
                         truncated_data['ip'] = '' + _this.instance.get_property('ip') + '';
                         _.sendRequest(url, track_type, {
                             data: _.base64Encode(_.JSONEncode(truncated_data)),
-                            token: _this.instance._get_config('token')
+                            sdk_token: _this.instance._get_config('sdk_token')
                         }, callback_fn);
                     }, 1000)
                 } else {
                     _.sendRequest(url, track_type, {
                         data: _.base64Encode(_.JSONEncode(truncated_data)),
-                        token: _this.instance._get_config('token')
+                        sdk_token: _this.instance._get_config('sdk_token')
                     }, callback_fn);
                 }
 
@@ -8215,9 +8218,11 @@
             key: 'login',
             value: function login(user_id) {
                 // this._signup(user_id);
-                this['local_storage'].register({'userId': user_id});
-                this['local_storage'].register({'loginStatus': '1'});
-                this.track(SYSTEM_EVENT_OBJECT.login.event_id, SYSTEM_EVENT_OBJECT.login.event_name, SYSTEM_EVENT_OBJECT.login.event_type);
+                if  (user_id !== '' && user_id != null) {
+                    this['local_storage'].register({'userId': user_id});
+                    this['local_storage'].register({'loginStatus': '1'});
+                }
+                // this.track(SYSTEM_EVENT_OBJECT.login.event_id, SYSTEM_EVENT_OBJECT.login.event_name, SYSTEM_EVENT_OBJECT.login.event_type);
             }
             // 清除本地用户信息，退出用户（选则调用）
 
@@ -8226,7 +8231,7 @@
             value: function logout() {
                 this['local_storage'].register({'userId': ''});
                 this['local_storage'].register({'loginStatus': '0'});
-                this.track(SYSTEM_EVENT_OBJECT.logout.event_id, SYSTEM_EVENT_OBJECT.logout.event_name, SYSTEM_EVENT_OBJECT.logout.event_type);
+                // this.track(SYSTEM_EVENT_OBJECT.logout.event_id, SYSTEM_EVENT_OBJECT.logout.event_name, SYSTEM_EVENT_OBJECT.logout.event_type);
             }
         }]);
 
@@ -8267,7 +8272,7 @@
 
             var local_storage = config['local_storage'];
             if (_.isObject(local_storage)) {
-                this['name'] = local_storage['name'] || '' + config['token'] + '_sdk';
+                this['name'] = local_storage['name'] || '' + config['sdk_token'] + '_sdk';
                 var storage_type = local_storage['type'] || 'cookie';
 
                 // 判断是否支持 localStorage
@@ -8634,7 +8639,7 @@
             this.instance = instance;
             // 渠道推广的参数信息
             this.channel_params = {};
-            this.cookie_name = '' + this.instance._get_config('token') + '_c';
+            this.cookie_name = '' + this.instance._get_config('sdk_token') + '_c';
             this._set_channel_params();
         }
 
@@ -8811,16 +8816,16 @@
     var SMARTLib = function () {
         /**
          *
-         * @param {String} token 上报数据凭证
+         * @param {String} sdk_token 上报数据凭证
          * @param {Object} config sdk客户端配置
          */
-        function SMARTLib(token, config) {
+        function SMARTLib(sdk_token, config) {
             _classCallCheck$5(this, SMARTLib);
 
             this['__loaded'] = true;
             this._ = _;
             this['config'] = {};
-            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, SDK_CONFIG, APP_CONFIG, SYSTEM_CONFIG, config, {'token': token}));
+            this._set_config(_.extend({}, DEFAULT_CONFIG, PRODUCT_CONFIG, SDK_CONFIG, APP_CONFIG, SYSTEM_CONFIG, config, {'sdk_token': sdk_token}));
             this['local_storage'] = new LOCAL_STORAGE(this['config']);
             // 运行钩子函数
             this._loaded();
@@ -8999,7 +9004,7 @@
         }, {
             key: 'set_visit_id',
             value: function set_visit_id(visitID) {
-                if (visitID !== '' && visitID != null) {
+                if ((visitID !== '' && visitID != null) && (this.get_property('visitID') == undefined)) {
                     this['local_storage'].register({'visitID': visitID});
                 }
             }
@@ -9232,11 +9237,11 @@
 
         _createClass$6(LoaderSync, [{
             key: 'init',
-            value: function init(token, config) {
+            value: function init(sdk_token, config) {
                 if (this['__loaded']) {
                     return;
                 }
-                this.instance = new SMARTLib(token, config);
+                this.instance = new SMARTLib(sdk_token, config);
                 this.instance.init = this['init'];
                 window['iask_web'] = this.instance;
             }

@@ -60,13 +60,13 @@
     </style>
     <script src="../lib/iask-web-sdk.js" charset="utf-8"></script>
     <script>
-        var visitID = '36958323';
+        var visitID = '454696891111';
         iask_web.init('iask_web', {
             local_storage: {
                 type: 'localStorage'
             },
             loaded: function (sdk) {
-                sdk.set_visit_id(visitID);
+                sdk.set_visit_id(visitID);  //设置visitID
             }
         });
     </script>
@@ -85,6 +85,7 @@
 <script>
     document.getElementsByTagName('h2')[0].onclick = function (e) {
         iask_web.login(document.getElementById('userId').value);
+        // iask_web.login(null);
     }
     document.getElementsByTagName('h2')[1].onclick = function (e) {
         iask_web.logout();
