@@ -7700,7 +7700,7 @@
                     dataType: SYSTEM_EVENT_TYPE,
                     // 客户端唯一凭证(设备凭证)
                     deviceID: this.instance.get_device_id(),
-                    userId: this.instance.get_property('user_id'),
+                    userID: this.instance.get_property('user_id'),
                     // 上报时间
                     reportTime: new Date().getTime(),
                     // 终端类型 （js，小程序、安卓、IOS、server、pc）
@@ -7935,7 +7935,7 @@
             key: '_signup',
             value: function _signup(user_id) {
                 // 默认是空值,若有值则调用退出
-                var anonymous_id = this.instance.get_property('userId');
+                var anonymous_id = this.instance.get_property('userID');
                 if (anonymous_id !== user_id) {
                     if (anonymous_id) {
                         this.logout();
@@ -8009,8 +8009,8 @@
                     console.error('上报数据需要一个事件类型');
                     return;
                 }
-                if (event_type !== 'page' && event_type !== 'click' && event_type !== 'view') {
-                    console.error('事件类型必须为page、click或者view');
+                if (event_type !== 'page' && event_type !== 'click' && event_type !== 'view' &&  event_type !== 'query') {
+                    console.error('事件类型必须为page、click或者view或者query');
                     return;
                 }
                 if (!_.isFunction(callback)) {
@@ -8060,7 +8060,7 @@
 
                 // 上报数据
                 var data = {
-                    trackId: Number(String(Math.random()).slice(2, 8) + String(Math.random()).slice(2, 6) + String((new Date()).getTime()).slice(-4)),
+                    trackID: Number(String(Math.random()).slice(2, 8) + String(Math.random()).slice(2, 6) + String((new Date()).getTime()).slice(-4)),
                     eventType: event_type.toLowerCase(),
                     eventID: event_id,
                     // 事件名称
@@ -8078,7 +8078,7 @@
 
                     loginStatus: this.instance.get_property('loginStatus'),
                     visitID: this.instance.get_property('visitID'),
-                    userId: this.instance.get_property('userId'),
+                    userID: this.instance.get_property('userID'),
 
                     // 当前会话id
                     sessionID: this.instance.get_property('sessionID'),
@@ -8110,8 +8110,8 @@
                 };
 
                 // userID、visitID和loginStatus 值初始化
-                if (!this.instance.get_property('userId')) {
-                    data['userId'] = '';
+                if (!this.instance.get_property('userID')) {
+                    data['userID'] = '';
                 }
                 if (!this.instance.get_property('visitID')) {
                     data['visitID'] = '';
@@ -8219,7 +8219,7 @@
             value: function login(user_id) {
                 // this._signup(user_id);
                 if  (user_id !== '' && user_id != null) {
-                    this['local_storage'].register({'userId': user_id});
+                    this['local_storage'].register({'userID': user_id});
                     this['local_storage'].register({'loginStatus': '1'});
                 }
                 // this.track(SYSTEM_EVENT_OBJECT.login.event_id, SYSTEM_EVENT_OBJECT.login.event_name, SYSTEM_EVENT_OBJECT.login.event_type);
@@ -8229,7 +8229,7 @@
         }, {
             key: 'logout',
             value: function logout() {
-                this['local_storage'].register({'userId': ''});
+                this['local_storage'].register({'userID': ''});
                 this['local_storage'].register({'loginStatus': '0'});
                 // this.track(SYSTEM_EVENT_OBJECT.logout.event_id, SYSTEM_EVENT_OBJECT.logout.event_name, SYSTEM_EVENT_OBJECT.logout.event_type);
             }
