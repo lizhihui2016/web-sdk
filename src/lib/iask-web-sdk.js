@@ -8167,9 +8167,9 @@
 
                 console.log('上报前的埋点数据:', truncated_data);
 
-                if (!checkData(truncated_data)) {
-                    return;
-                }
+                // if (!checkData(truncated_data)) {
+                //     return;
+                // }
 
                 var callback_fn = function callback_fn(response) {
                     callback(response, data);
